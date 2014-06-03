@@ -60,19 +60,24 @@ def Moment():
 
 time= []
 ypos= [] # of the tip of the pendulum    
+energy= []
 dt=.001
 k= 0
 while k < 5/dt:
     time.append(k*dt)
-    ypos.append(rod.a1[1]) # y-component of principal axis 1    
+    ypos.append(rod.a1[1]) # y-component of principal axis 1
+    energy.append(rod.I33*rod.w[2]**2 + m*g*(L/2)*rod.a1[1]/rod.a1[0])    
     
     a= rod.alpha(Moment())
+    rod.w+= a*dt
     rod.rotate(Rotd(rod.w*dt))
-    rod.w+= a*dt;
-    #print(rod.a1[0]) # x-component of the pendulum
-    k+= 1
 
-plt.plot(time, ypos)
+    k+= 1
+print(energy[k-1])
+
+#plt.plot(time, ypos)
 T= 2.*pi*sqrt(2.*L/(3.*g)) # the mathematically derived period
-plt.plot([T,T],[-1,0],'r--')
+plt.plot(T,0,'ro')
+
+plt.plot(time, energy)
 plt.show()
