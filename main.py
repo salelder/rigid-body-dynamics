@@ -1,6 +1,7 @@
 from numpy import *
 import matplotlib.pyplot as plt
 
+# Mathematical support functions
 def Rot1(t):
     """Returns a rotation matrix for axis 1 and finite angle t."""
     return array([[1.,0.,0.], [0.,cos(t),-sin(t)], [0.,sin(t),cos(t)]]);
@@ -10,74 +11,52 @@ def Rot2(t):
 def Rot3(t):
     """Returns a rotation matrix for axis 3 and finite angle t."""
     return array([[cos(t),-sin(t),0.], [sin(t),cos(t),0.], [0.,0.,1.]]);
+def RotS123(t):
+    """Returns a rotation matrix for a space 1-2-3 rotation with finite
+    angles t1, t2, t3"""
+    return Rot3(t[2]).dot(Rot2(t[1])).dot(Rot1(t[0]));
 def Rotd(t):
     """Returns a rotation matrix for array of infinitesimal angles t1, t2, t3
     about axes 1, 2, 3, respectively."""
-    t1= t[0]; t2= t[1]; t3= t[2];    
-    return array([[1.,-t3,t2], [t3,1.,-t1], [-t2,t1,1.]]);
+    return array([[1.,-t[2],t[1]], [t[2],1.,-t[0]], [-t[1],t[0],1.]]);
 
 def unit(v):
     """Returns a unit vector as an array with direction given by array v."""
     return v/linalg.norm(v)
-        
-class RigidBody:
-    """Encodes a rigid body and provides methods for applying moments to it.
-    At this time, only planar rotations about axis 3 are supported!"""
-    def __init__(self, I11, I22, I33, a1, a2, a3, w):
-        """a1...3 are the principal axes of the object. They define its orientation.
-        w is the object's angular velocity. I11...33 define the inertia tensor
-        for the object about the same point that moments will be computed about.
-        E.g., In the case of a pendulum, this is most likely the pivot point."""
-        self.I11= I11; self.I22= I22; self.I33= I33; self.a1= a1; self.a2= a2; self.a3= a3;
-        self.I= array([[I11,0.,0.], [0.,I22,0.], [0.,0.,I33]]);
-        self.w= w;
-        
-    def rotate(self, R):
-        """Rotates the rigid object according to the rotation matrix provided."""
-        self.a1= unit(dot(R, self.a1))
-        self.a2= unit(dot(R, self.a2))
-        self.a3= unit(dot(R, self.a3)) # rescale to unit vectors to help correct for errors
-        
-        self.I= dot(dot(R, self.I), R.transpose());
-        
-    def alpha(self, M):
-        """Computes the angular acceleration of the object given the total
-        external moments M."""
-        #In general, M= I alpha + w cross I w, where I is the inertia matrix
-        return array([0.,0.,M[2]/self.I33]); # For planar rotations only!
 
-L= 1.
-m= 1.
-t0= pi/6
-g= 9.81
+# Read in values from data input file
+fname= raw_input("Input file> ");
+f= open(fname, 'r')
 
-rod= RigidBody(0.,(m*L**2)/3,1.,
-    array([sin(t0),-cos(t0),0.]),array([cos(t0),sin(t0),0.]),array([0.,0.,1.]),
-    array([0.,0.,0.]))
-def Moment():
-    """Return the total external moment on the rod defined above."""
-    return array([0.,0.,-.5*L*m*g*rod.a1[0]]);
-
-time= []
-ypos= [] # of the tip of the pendulum    
-energy= []
-dt=.001
-k= 0
-while k < 5/dt:
-    time.append(k*dt)
-    ypos.append(rod.a1[1]) # y-component of principal axis 1
-    energy.append(rod.I33*rod.w[2]**2 + m*g*(L/2)*rod.a1[1]/rod.a1[0])    
+mA= None; IA= None; mB= None; IB= None; thA= None; thB= None; p= None; q= None; r= None
+if f.readline() == "3D double pendulum\n":
+    mA= float(f.readline().translate(None, '\n'))
+    IA= reshape([float(k) for k in f.readline().translate(None, '\n').split(' ')], (3,3))
+    mB= float(f.readline().translate(None, '\n'))
+    IB= reshape([float(k) for k in f.readline().translate(None, '\n').split(' ')], (3,3))
     
-    a= rod.alpha(Moment())
-    rod.w+= a*dt
-    rod.rotate(Rotd(rod.w*dt))
+    thA= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    thB= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    p= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    q= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    r= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+else:
+    print "Error: file not recognized!"
 
-    k+= 1
-print(energy[k-1])
+# Rotate inertia matricies according to input file
+CA= RotS123(thA); CB= RotS123(thB);
+IA= CA.dot(IA).dot(CA.T); IB= CB.dot(IB).dot(CB.T);
 
-#plt.plot(time, ypos)
-T= 2.*pi*sqrt(2.*L/(3.*g)) # the mathematically derived period
-plt.plot(T,0,'ro')
+# Generate two additional generalized coordinates
+# vA is a unit vector perpendicular to p, and vB is a unit vector perpendicular to r
+vA= unit(array([0., 1., -p[1]/p[2]]))
+vB= unit(array([0., 1., -r[1]/r[2]]))
 
-plt.plot(time, energy)
-plt.show()
+# Solver
+def solve():
+    """Returns an array of alpha's, Ax, Ay, Az, Bx, By, Bz."""
+    
+    return True
+
+#plt.plot(time, energy)
+#plt.show()
