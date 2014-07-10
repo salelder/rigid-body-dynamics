@@ -1,0 +1,12 @@
+3D double pendulum
+mA
+IAxx IAxy IAxz IAyx IAyy IAyz IAzx IAzy IAzz
+mB
+IBxx IBxy IBxz IByx IByy IByz IBzx IBzy IBzz
+thAx thAy thAz
+thBx thBy thBz
+wAx wAy wAz
+wBx wBy wBz
+px py pz
+qx qy qz
+rx ry rz
