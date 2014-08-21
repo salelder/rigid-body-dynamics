@@ -1,5 +1,6 @@
 from numpy import *
 import matplotlib.pyplot as plt
+from scipy.integrate import ode
 
 # Mathematical support functions
 def Rot1(t):
@@ -25,14 +26,14 @@ def unit(v):
     return v/linalg.norm(v)
 
 x= array([1., 0., 0.]); y= array([0., 1., 0.]); z= array([0., 0., 1.])
-g= 9.81
 
 # Read in values from data input file
 fname= raw_input("Input file> ");
 f= open(fname, 'r')
 
-mA= None; IA= None; mB= None; IB= None; thA= None; thB= None;
-wA= None; wB= None; p= None; q= None; r= None
+mA= None; IA= None; mB= None; IB= None; thA= None; thB= None
+wA0= None; wB0= None; p0= None; q0= None; r0= None
+g= 0.; dt= 0.; T= 0.
 if f.readline() == "3D double pendulum\n":
     mA= float(f.readline().translate(None, '\n'))
     IA= reshape([float(k) for k in f.readline().translate(None, '\n').split(' ')], (3,3))
@@ -41,12 +42,15 @@ if f.readline() == "3D double pendulum\n":
     
     thA= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
     thB= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
-    wA= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
-    wB= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
-    p= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
-    q= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
-    r= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    wA0= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    wB0= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    p0= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    q0= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
+    r0= array([float(k) for k in f.readline().translate(None, '\n').split(' ')])
     
+    g= float(f.readline().translate(None, '\n'))
+    dt= float(f.readline().translate(None, '\n'))
+    T= float(f.readline().translate(None, '\n'))    
 else:
     print "Error: file not recognized!"
 
@@ -54,15 +58,20 @@ else:
 CA= RotS123(thA); CB= RotS123(thB);
 IA= CA.dot(IA).dot(CA.T); IB= CB.dot(IB).dot(CB.T);
 
-# Generate two additional generalized coordinates
+# Generate two additional generalized coordinates,
+# needed to fully define orientation in all cases
 # vA is a unit vector perpendicular to p, and vB is a unit vector perpendicular to r
-vA= unit(array([0., 1., -p[1]/p[2]]))
-vB= unit(array([0., 1., -r[1]/r[2]]))
+vA0= unit(array([0., 1., -p[1]/p[2]]))
+vB0= unit(array([0., 1., -r[1]/r[2]]))
 
 # Solver
-def solve():
-    """Returns an array of alpha's, Ax, Ay, Az, Bx, By, Bz."""
-
+def solve(t, state):
+    """t is current time.
+    state is a list of: p, q, r, vA, vB, pd, qd, rd, vAd, vBd, wA, wB ('d' for 'dot').
+    Returns the time-derivative of state."""
+    
+    p= state[0]; q= state[1]; r= state[2]; wA= state[10]; wB= state[11]    
+    
     bA= cross(wA, IA.dot(wA))-mA*cross(g*z+cross(wA, cross(wA, p)), p)-mB*cross(g*z+cross(wA, cross(wA, q))+cross(wB, cross(wB, r)), q)
     bB= cross(wB, IB.dot(wB))-mB*cross(cross(wA, cross(wA, q))+cross(wB, cross(wB, r))+g*z, r)
     b= array([bA.dot(x), bA.dot(y), bA.dot(z), bB.dot(x), bB.dot(y), bB.dot(z)])
@@ -77,9 +86,12 @@ def solve():
     A[4]= [mB*qy*rx, -mB*(qx*rx+qz*rz), mB*qy*rz, mB*ry*rx-IB[1][0], -mB*(rx**2+rz**2)-IB[1][1], mB*ry*rz-IB[1][2]]
     A[5]= [mB*qz*rx, mB*qz*ry, -mB*(qy*ry+qx*rx), mB*rz*rx-IB[2][0], mB*rz*ry-IB[2][1], -mB*(ry**2+rx**2)-IB[2][2]]
     
-    return linalg.solve(A, b)
+    alphas= linalg.solve(A, b)
 
-print solve()
+
+# Integration scheme
+
+print solve(p, q, r, wA, wB)
 #plt.plot(time, energy)
 #plt.show()
 f.close()

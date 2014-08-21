@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head><title>3d double pendulum player</title>
+<script type="text/javascript">
+function init() {
+	// CUSTOMIZABLE DATA //
+
+	// anim is a 3d array. Each top-level entry is a collection of vectors for a particular moment in time.
+	// The vectors are p, q, r, vA, and vB, respectively. A*, joint, and B* are drawn.
+	// Copy and paste these data from the file output by the Python simulation.
+	// x-axis is coming out of the screen, +y is right, and +z is up.
+	anim= [[[0,0,0]],
+	[[1,1,1]],
+	[[2,2,2]],
+	[[3,3,3]]]
+	
+	W= 5 // Width of a quadrant of display square, in same units as vectors. Not a pixel measure. Origin is at the center.
+	d= 10 // distance viewer is along x-axis from origin. Point radius falloff is 1/x.
+	R= 100 // apparent radius for x=0
+	
+	skip= 1 // how many moments to jump ahead per frame jump. skip= 1 means that every moment is shown.
+	t= 30 // time, in milliseconds, to show each frame.
+	
+	// END OF CUSTOMIZATION //
+	
+	cnv= document.getElementById('cnv')
+	w= cnv.width
+	c= cnv.getContext('2d')
+	k= 0 // next frame index
+	l= anim.length
+	
+	setInterval(draw, t)
+}
+
+function draw() { // uses current value of global variable k
+	c.clearRect(0,0,w,w)
+	for (v=0; v<anim[k].length; v++) {
+		// we have a vector
+		vec= anim[k][v]
+		rad= 100/(d-vec[0]) // radius
+		// convert from math to pixels for y and z:
+		y= vec[1] * w/(2*W) + w/2
+		z= -w*vec[2]/(2*W) + w/2 
+		c.beginPath(); c.arc(y, z, rad, 0, 2*Math.PI, true)
+		c.fillStyle= "black"; c.fill()
+	}
+	
+	k+= skip
+	while (k >= l) {k -= l}
+}
+</script></head>
+<body onload="init()">
+<canvas id="cnv" width="500" height="500">Sorry, your browser does not support the canvas tag.</canvas>
+</body>
+</html>

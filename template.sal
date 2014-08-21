@@ -10,3 +10,6 @@ wBx wBy wBz
 px py pz
 qx qy qz
 rx ry rz
+g
+dt
+T
