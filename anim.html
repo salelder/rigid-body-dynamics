@@ -5,21 +5,18 @@
 function init() {
 	// CUSTOMIZABLE DATA //
 
-	// anim is a 3d array. Each top-level entry is a collection of vectors for a particular moment in time.
-	// The vectors are p, q, r, vA, and vB, respectively. A*, joint, and B* are drawn.
+	// anim is a 3d array. Each top-level entry is a collection of points for a particular moment in time.
+	// The points are A*, P (joint), and B*, respectively. draw() draws these and origin.
 	// Copy and paste these data from the file output by the Python simulation.
 	// x-axis is coming out of the screen, +y is right, and +z is up.
-	anim= [[[0,0,0]],
-	[[1,1,1]],
-	[[2,2,2]],
-	[[3,3,3]]]
+	anim= [[[0.0,0.0,-1.0],[0.0,0.0,-2.0],[0.0,1.0,-3.0]],[[0.0,0.0981,-1.0],[0.0,0.1962,-2.0],[0.0,1.2943,-3.0981]],[[0.0,0.34241805,-0.99037639],[0.0,0.6848361,-1.98075278],[0.0,2.02725415,-3.28467639]],[[0.0,1.27973884603,-0.852503455175],[0.0,2.55947769207,-1.70500691035],[0.0,4.85652956232,-3.51297525577]],[[0.0,-12.8484827428,-4.9371339587],[0.0,-25.6969654856,-9.8742679174],[0.0,-38.8010738632,-4.75198091105]],[[0.0,-394.230101044,-19.7120635181],[0.0,-788.460202089,-39.4241270363],[0.0,-1540.09308334,478.895152927]],[[0.0,128801.759571,551194.390694],[0.0,257603.519141,1102388.78139],[0.0,422616.938572,1044385.72938]],[[0.0,300264672316.0,3.21715306141e+12],[0.0,600529344632.0,6.43430612281e+12],[0.0,2.74375872586e+12,4.95636272977e+12]],[[0.0,-1.07498331429e+25,-3.56481563512e+25],[0.0,-2.14996662859e+25,-7.12963127023e+25],[0.0,-2.46221112268e+25,-7.01987575065e+25]],[[0.0,1.03432483832e+55,-9.65416603824e+53],[0.0,2.06864967664e+55,-1.93083320765e+54],[0.0,3.52208822479e+55,-1.1953558345e+55]],[[0.0,8.85693074102e+109,3.75273683865e+110],[0.0,1.7713861482e+110,7.5054736773e+110],[0.0,1.47488080892e+110,7.60969680433e+110]],[[0.0,-4.48217434646e+226,-4.80164996771e+227],[0.0,-8.96434869292e+226,-9.60329993542e+227],[0.0,-4.81774652324e+227,-6.89921389508e+227]]]
 	
 	W= 5 // Width of a quadrant of display square, in same units as vectors. Not a pixel measure. Origin is at the center.
 	d= 10 // distance viewer is along x-axis from origin. Point radius falloff is 1/x.
 	R= 100 // apparent radius for x=0
 	
 	skip= 1 // how many moments to jump ahead per frame jump. skip= 1 means that every moment is shown.
-	t= 30 // time, in milliseconds, to show each frame.
+	t= 100 // time, in milliseconds, to show each frame.
 	
 	// END OF CUSTOMIZATION //
 	
@@ -34,8 +31,11 @@ function init() {
 
 function draw() { // uses current value of global variable k
 	c.clearRect(0,0,w,w)
+	// draw origin
+	c.beginPath(); c.arc(w/2, w/2, 10, 0, 2*Math.PI, true)
+	c.fillStyle= "black"; c.fill()
 	for (v=0; v<anim[k].length; v++) {
-		// we have a vector
+		// we have a vector from the origin
 		vec= anim[k][v]
 		rad= 100/(d-vec[0]) // radius
 		// convert from math to pixels for y and z:
